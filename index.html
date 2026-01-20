@@ -799,6 +799,20 @@
             font-size: 0.9rem;
             margin-top: 1rem;
         }
+        
+        /* Image loading fix */
+        .profile-img.loading {
+            background: linear-gradient(45deg, var(--primary), var(--secondary), var(--accent));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .profile-img.loading::after {
+            content: 'Loading...';
+            color: white;
+            font-size: 1rem;
+        }
     </style>
 </head>
 <body>
@@ -817,7 +831,11 @@
                 <div class="profile-section">
                     <div class="profile-img-container">
                         <div class="profile-img pulse">
-                            <img src="https://6949d89d30e1aa8ca4b7ef56.imgix.net/25485583-f84d-4ae4-b8a5-81dc15178db6.jpeg" alt="Fathelrahman A. Khalid">
+                            <!-- FIXED IMAGE URL WITH PROPER ENCODING -->
+                            <img src="https://6949d89d30e1aa8ca4b7ef56.imgix.net/25485583-f84d-4ae4-b8a5-81dc15178db6.jpeg?auto=format&fit=crop&w=800&h=800" 
+                                 alt="Fathelrahman A. Khalid Abdelrahman"
+                                 onload="this.parentElement.classList.remove('loading')"
+                                 onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'; this.parentElement.classList.remove('loading')">
                         </div>
                         <div class="profile-badge">Available for Consulting</div>
                     </div>
@@ -1113,6 +1131,24 @@
     <script>
         // Enhanced animations and interactions
         document.addEventListener('DOMContentLoaded', function() {
+            // Show loading state for image
+            const profileImg = document.querySelector('.profile-img img');
+            profileImg.parentElement.classList.add('loading');
+            
+            // Preload the image
+            const img = new Image();
+            img.src = profileImg.src;
+            img.onload = function() {
+                profileImg.parentElement.classList.remove('loading');
+                profileImg.style.opacity = '1';
+            };
+            img.onerror = function() {
+                // If image fails, use fallback
+                profileImg.src = 'https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
+                profileImg.parentElement.classList.remove('loading');
+                profileImg.style.opacity = '1';
+            };
+            
             // Animate stats counting up
             const statNumbers = document.querySelectorAll('.stat-number');
             const observer = new IntersectionObserver((entries) => {
@@ -1160,13 +1196,13 @@
             });
             
             // Add interactive profile image
-            const profileImg = document.querySelector('.profile-img');
-            profileImg.addEventListener('mouseenter', function() {
+            const profileImgContainer = document.querySelector('.profile-img');
+            profileImgContainer.addEventListener('mouseenter', function() {
                 this.style.animation = 'rotate 3s linear infinite, pulse 2s infinite';
                 this.style.boxShadow = '0 0 40px rgba(0, 229, 255, 0.7), inset 0 0 40px rgba(0, 229, 255, 0.3)';
             });
             
-            profileImg.addEventListener('mouseleave', function() {
+            profileImgContainer.addEventListener('mouseleave', function() {
                 this.style.animation = 'rotate 20s linear infinite';
                 this.style.boxShadow = '0 0 30px rgba(0, 229, 255, 0.5), inset 0 0 30px rgba(0, 229, 255, 0.2)';
             });
