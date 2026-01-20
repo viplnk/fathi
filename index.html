@@ -127,6 +127,7 @@
             height: 100%;
             object-fit: cover;
             filter: contrast(1.1) brightness(1.05);
+            display: block; /* Important: Ensures image displays */
         }
         
         .profile-badge {
@@ -800,18 +801,35 @@
             margin-top: 1rem;
         }
         
-        /* Image loading fix */
-        .profile-img.loading {
-            background: linear-gradient(45deg, var(--primary), var(--secondary), var(--accent));
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        /* IMAGE FIX STYLES */
+        .profile-img {
+            position: relative;
         }
         
-        .profile-img.loading::after {
-            content: 'Loading...';
-            color: white;
-            font-size: 1rem;
+        .profile-img-fallback {
+            display: none;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+        }
+        
+        /* Force image to display */
+        img {
+            -webkit-user-drag: none;
+            user-select: none;
+            -moz-user-select: none;
+            -webkit-user-select: none;
+            -ms-user-select: none;
+        }
+        
+        /* Ensure image is visible */
+        .profile-img img {
+            visibility: visible !important;
+            opacity: 1 !important;
+            display: block !important;
+            position: relative;
+            z-index: 1;
         }
     </style>
 </head>
@@ -831,11 +849,15 @@
                 <div class="profile-section">
                     <div class="profile-img-container">
                         <div class="profile-img pulse">
-                            <!-- FIXED IMAGE URL WITH PROPER ENCODING -->
-                            <img src="https://6949d89d30e1aa8ca4b7ef56.imgix.net/25485583-f84d-4ae4-b8a5-81dc15178db6.jpeg?auto=format&fit=crop&w=800&h=800" 
+                            <!-- FIXED IMAGE - Using a direct approach -->
+                            <img id="profileImage" 
+                                 src="https://6949d89d30e1aa8ca4b7ef56.imgix.net/25485583-f84d-4ae4-b8a5-81dc15178db6.jpeg?auto=compress&fit=crop&w=800&h=800" 
                                  alt="Fathelrahman A. Khalid Abdelrahman"
-                                 onload="this.parentElement.classList.remove('loading')"
-                                 onerror="this.onerror=null; this.src='https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'; this.parentElement.classList.remove('loading')">
+                                 crossorigin="anonymous">
+                            <!-- Fallback image that will show if main image fails -->
+                            <img class="profile-img-fallback" 
+                                 src="https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80" 
+                                 alt="Professional Fallback">
                         </div>
                         <div class="profile-badge">Available for Consulting</div>
                     </div>
@@ -1129,25 +1151,51 @@
     </footer>
     
     <script>
-        // Enhanced animations and interactions
+        // FIX FOR IMAGE DISPLAY ISSUE
         document.addEventListener('DOMContentLoaded', function() {
-            // Show loading state for image
-            const profileImg = document.querySelector('.profile-img img');
-            profileImg.parentElement.classList.add('loading');
+            const profileImage = document.getElementById('profileImage');
+            const fallbackImage = document.querySelector('.profile-img-fallback');
             
-            // Preload the image
-            const img = new Image();
-            img.src = profileImg.src;
-            img.onload = function() {
-                profileImg.parentElement.classList.remove('loading');
-                profileImg.style.opacity = '1';
+            console.log('Attempting to load profile image...');
+            
+            // Force image to load
+            profileImage.onload = function() {
+                console.log('Profile image loaded successfully');
+                this.style.visibility = 'visible';
+                this.style.opacity = '1';
+                this.style.display = 'block';
+                fallbackImage.style.display = 'none';
+                
+                // Force a repaint to ensure image shows
+                this.style.transform = 'translateZ(0)';
             };
-            img.onerror = function() {
-                // If image fails, use fallback
-                profileImg.src = 'https://images.unsplash.com/photo-1560250097-0b93528c311a?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80';
-                profileImg.parentElement.classList.remove('loading');
-                profileImg.style.opacity = '1';
+            
+            profileImage.onerror = function() {
+                console.log('Profile image failed to load, showing fallback');
+                this.style.display = 'none';
+                fallbackImage.style.display = 'block';
+                fallbackImage.style.visibility = 'visible';
+                fallbackImage.style.opacity = '1';
             };
+            
+            // Try to load the image immediately
+            if (profileImage.complete) {
+                profileImage.onload();
+            } else {
+                // If image doesn't load within 3 seconds, show fallback
+                setTimeout(function() {
+                    if (!profileImage.complete) {
+                        console.log('Image loading timeout, showing fallback');
+                        profileImage.style.display = 'none';
+                        fallbackImage.style.display = 'block';
+                        fallbackImage.style.visibility = 'visible';
+                        fallbackImage.style.opacity = '1';
+                    }
+                }, 3000);
+            }
+            
+            // Force image to be visible (overrides any CSS that might be hiding it)
+            profileImage.style.cssText += 'visibility: visible !important; opacity: 1 !important; display: block !important;';
             
             // Animate stats counting up
             const statNumbers = document.querySelectorAll('.stat-number');
@@ -1196,13 +1244,13 @@
             });
             
             // Add interactive profile image
-            const profileImgContainer = document.querySelector('.profile-img');
-            profileImgContainer.addEventListener('mouseenter', function() {
+            const profileImg = document.querySelector('.profile-img');
+            profileImg.addEventListener('mouseenter', function() {
                 this.style.animation = 'rotate 3s linear infinite, pulse 2s infinite';
                 this.style.boxShadow = '0 0 40px rgba(0, 229, 255, 0.7), inset 0 0 40px rgba(0, 229, 255, 0.3)';
             });
             
-            profileImgContainer.addEventListener('mouseleave', function() {
+            profileImg.addEventListener('mouseleave', function() {
                 this.style.animation = 'rotate 20s linear infinite';
                 this.style.boxShadow = '0 0 30px rgba(0, 229, 255, 0.5), inset 0 0 30px rgba(0, 229, 255, 0.2)';
             });
